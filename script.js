@@ -1,4 +1,4 @@
-const targetWords = [
+let targetWords = [
   "cigar",
   "rebut",
   "sissy",
@@ -15298,7 +15298,7 @@ const guessGrid = document.querySelector("[data-guess-grid]")
 const offsetFromDate = new Date(2022, 0, 1)
 const msOffset = Date.now() - offsetFromDate
 const dayOffset = msOffset / 1000 / 60 / 60 / 24
-const targetWord = targetWords[Math.floor(dayOffset)]
+let targetWord = targetWords[Math.floor(dayOffset)]
 
 startInteraction()
 
@@ -15364,6 +15364,19 @@ function deleteKey() {
   delete lastTile.dataset.letter
 }
 
+function getMask(correct, guess) {
+  let ret = 0
+  for (let i = 0; i < WORD_LENGTH; ++i) {
+    if (correct[i] == guess[i])
+      ret = ret * 3 + 0
+    else if (correct.includes(guess[i]))
+      ret = ret * 3 + 1
+    else
+      ret = ret * 3 + 2
+  }
+  return ret
+}
+
 function submitGuess() {
   const activeTiles = [...getActiveTiles()]
   if (activeTiles.length !== WORD_LENGTH) {
@@ -15381,6 +15394,22 @@ function submitGuess() {
     shakeTiles(activeTiles)
     return
   }
+
+  let mp = new Array(3 ** WORD_LENGTH).fill(0);
+
+  targetWords.forEach(element => {
+    let mask = getMask(element, guess)
+    ++mp[mask];
+  })
+
+  let best_mask = 0
+
+  for (let i = 0; i < mp.length; ++i)
+    if (mp[i] >= mp[best_mask])
+      best_mask = i
+
+  targetWords = targetWords.filter(element => getMask(element, guess) == best_mask)
+  targetWord = targetWords[0]
 
   stopInteraction()
   activeTiles.forEach((...params) => flipTile(...params, guess))
